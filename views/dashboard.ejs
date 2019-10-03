@@ -1,0 +1,109 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <a class="navbar-brand" href="#">Navbar</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarColor01">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item active">
+        <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">Features</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">Pricing</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="#">About</a>
+      </li>
+    </ul>
+    <form class="form-inline my-2 my-lg-0">
+      <input class="form-control mr-sm-2" type="text" placeholder="Search">
+      <button class="btn btn-secondary my-2 my-sm-0" type="submit">Search</button>
+    </form>
+  </div>
+</nav>
+<h1 class="mt-4">Dashboard</h1>
+<p class="lead mb-3"> Welcome <%= name %></p>
+<a href="/users/logout" class="btn btn-secondary">Logout</a><br>
+<div class="tests">
+<ul class="list-group">
+ 
+   <% for(let i in tests) {%>
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+<a href="#" onclick="getQuestions('<%= tests[i].name %>');"><%= tests[i].name %> this record is with id:</a><br>
+ <span class="badge badge-primary badge-pill">1</span>
+  </li>
+<% } %>
+   
+</ul>
+
+</div>
+<div id="questions">
+
+</div>
+<script>
+let score = 0;
+function getQuestions(e){
+    //Fetch the id of the element clicked
+    console.log(e);
+    $.ajax({
+        type: "POST",
+        url: "/getQuestions",
+        data: {name:e},
+        success: function (response) {
+            document.getElementsByClassName('tests')[0].style.display='none';
+            console.log(response);
+            var str='<fieldset class="form-group"><legend>Radio buttons</legend>';
+            for(let i=0;i<response.length;i++){
+                str=str+response[i].question+'<br>';
+                for(let j in response[i].options){
+     str+=`<div class="form-check">
+        <label class="form-check-label"><input type="radio" onclick="checkAnswer('${response[i].options[j]}','${response[i].answer}','q${i}')" name="q${i}" value="${response[i].options[j]}">&nbsp;&nbsp;&nbsp;&nbsp;${response[i].options[j]}</label>
+      </div>`;
+                }
+            str+='<br>';
+            }
+            str+='</fieldset><button onclick="submitScore();">Submit</button><br>';
+            document.getElementById('questions').innerHTML=str;
+            
+        }
+    }).fail(function(response){
+      console.log(response);
+    });
+    //||
+    //Contact server to match the test id and retrieve the questions
+    //Once we have the questions delete the tests from here and put the questions here in the DOM tree.
+}
+var mp=new Map();
+
+function checkAnswer(e,f,k){
+    if(e==f){
+        if(mp.has(k)){
+          if(mp.get(k)==0){
+              mp.set(k,1);
+              score++;
+          }
+        }
+        else{
+            mp.set(k,1);
+            score++;
+        }
+    }
+    else{
+        if(mp.has(k)){
+          if(mp.get(k)==1){
+              mp.set(k,0);
+              score--;
+          }
+        }
+    }
+
+    console.log(score);
+}
+function submitScore(){
+    window.location.assign('/feedback?score='+score);
+}
+</script>
